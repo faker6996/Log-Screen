@@ -1,5 +1,47 @@
+# Build output
 bin/
 obj/
-*.user
+*.exe
+*.pdb
+*.dll
+*.cache
 *.suo
+*.user
 *.vs/
+*.vscode/
+*.sln.docstates
+
+# NuGet Packages
+*.nupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Visual Studio files
+*.csproj.user
+*.suo
+*.sln.docstates
+*.vcxproj.user
+*.vcxproj.filters
+*.DotSettings.user
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+Thumbs.db
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Debug/Release folders
+**/Debug/
+**/Release/
+
+# App.config secrets (nếu có file nhạy cảm)
+App.config
+*.config (

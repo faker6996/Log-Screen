@@ -1,47 +1,87 @@
-﻿
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
+using LogScreen.Entities;
+using System;
+using Newtonsoft.Json;
+using System.IO;
+using LogScreen.Utils;
 
 namespace LogScreen.Managers
 {
-    public class ConfigManager
+    public static class ConfigManager
     {
-        public string StartTime { get; set; }
-        public string StopTime { get; set; }
-        public int Interval { get; set; }
-        public int ActionQty { get; set; }
-        public bool StartWithWindows { get; set; }
-        public bool AllowForceEndTask { get; set; }
-        public int LiveCaptureCheck { get; set; }
-        public bool SoundDetect { get; set; }
-        public string FtpServer { get; set; }
-        public string FtpUsername { get; set; }
-        public string FtpPassword { get; set; }
 
-        public async Task LoadConfig(string url)
+        // Đảm bảo thư mục log tồn tại
+        static ConfigManager()
         {
-            using (HttpClient client = new HttpClient())
+            if (!Directory.Exists(Setting.SCREEN_LOG_ADDRESS))
             {
-                var response = await client.GetStringAsync(url);
-                var lines = response.Split('\n');
-                foreach (var line in lines)
-                {
-                    if (line.StartsWith("START=")) StartTime = line.Split('=')[1].Trim();
-                    if (line.StartsWith("STOP=")) StopTime = line.Split('=')[1].Trim();
-                    if (line.StartsWith("INTERVAL=")) Interval = int.Parse(line.Split('=')[1].Trim());
-                    if (line.StartsWith("ACTION_QTY=")) ActionQty = int.Parse(line.Split('=')[1].Trim());
-                    if (line.StartsWith("START_WITH_WINDOW=")) StartWithWindows = line.Split('=')[1].Trim() == "1";
-                    if (line.StartsWith("ALLOW_FORCE_ENDTASK=")) AllowForceEndTask = line.Split('=')[1].Trim() == "1";
-                    if (line.StartsWith("LIVE_CAPTURE_CHECK_FREQUENT=")) LiveCaptureCheck = int.Parse(line.Split('=')[1].Trim());
-                    if (line.StartsWith("SOUND_DETECT=")) SoundDetect = line.Split('=')[1].Trim() == "1";
-                    if (line.StartsWith("FTP_SERVER=")) FtpServer = line.Split('=')[1].Trim();
-                    if (line.StartsWith("FTP_USERNAME=")) FtpUsername = line.Split('=')[1].Trim();
-                    if (line.StartsWith("FTP_PASSWORD=")) FtpPassword = line.Split('=')[1].Trim();
-                }
+                Directory.CreateDirectory(Setting.SCREEN_LOG_ADDRESS);
             }
         }
+
+        public static async Task<Config> GetConfigFromUrlAsync(string url, int retryDelayMs = 5000, int maxRetries = -1)
+        {
+            int attempt = 0;
+
+            while (true) // Lặp vô hạn hoặc đến khi đạt maxRetries
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(url))
+                    {
+                        FileHelper.LogError("Not found ConfigUrl");
+                        return null;
+                    }
+
+                    using (HttpClient client = new HttpClient())
+                    {
+                        HttpResponseMessage response = await client.GetAsync(url);
+                        response.EnsureSuccessStatusCode();
+                        string configContent = await response.Content.ReadAsStringAsync();
+                        Config config = ParseConfig(configContent);
+
+                        if (config != null) // Thành công thì trả về config
+                        {
+                            return config;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    attempt++;
+                    string errorMessage = $"Attempt {attempt}: Error when read config - {ex.Message}";
+
+                    // Ghi lỗi vào file log
+                    FileHelper.LogError(errorMessage);
+
+                    // Nếu đạt tối đa số lần thử
+                    if (maxRetries > 0 && attempt >= maxRetries)
+                    {
+                        FileHelper.LogError("Max retries reached. Unable to fetch config.");
+                        return null;
+                    }
+                }
+
+                // Chờ trước khi thử lại
+                await Task.Delay(retryDelayMs);
+            }
+        }
+
+        private static Config ParseConfig(string configContent)
+        {
+            try
+            {
+                Config config = JsonConvert.DeserializeObject<Config>(configContent);
+                return config;
+            }
+            catch (JsonException ex)
+            {
+                LogError($"Error when parse JSON: {ex.Message}");
+                return null;
+            }
+        }
+
+        
     }
 }
-
-
-
