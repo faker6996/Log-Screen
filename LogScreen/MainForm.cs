@@ -26,7 +26,7 @@ namespace LogScreen
                 {
                     TimeSpan startTime = TimeSpan.Parse(config.START);
                     TimeSpan endTime = TimeSpan.Parse(config.STOP);
-                    int interval = Int32.Parse(config.INTERVAL) * 1000;
+                    int interval = Int32.Parse(config.INTERVAL) * 1000*60;
                     int actionQuantity = Int32.Parse(config.ACTION_QTY);
 
                     _captureScheduler = new Scheduler();

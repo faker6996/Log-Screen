@@ -77,7 +77,7 @@ namespace LogScreen.Managers
             }
             catch (JsonException ex)
             {
-                LogError($"Error when parse JSON: {ex.Message}");
+                FileHelper.LogError($"Error when parse JSON: {ex.Message}");
                 return null;
             }
         }
