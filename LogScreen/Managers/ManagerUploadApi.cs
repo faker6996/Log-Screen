@@ -84,7 +84,7 @@ namespace LogScreen.Managers
             {
                 _uploadTimer = new Timer();
             }
-            _uploadTimer.Interval = 1 * 60 * 1000; // 30 phút (ms)
+            _uploadTimer.Interval = Setting.UPLOAD_FILE_INTERVAL * 60 * 1000; // 30 phút (ms)
             _uploadTimer.Tick += UploadTimer_Tick; // Gắn sự kiện Tick
             _uploadTimer.Start(); // Bắt đầu timer
         }
