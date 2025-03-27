@@ -27,7 +27,7 @@ namespace LogScreen.Managers
                         // henry todo sound detect
                         if (soundDetect)
                         {
-                            //Console.WriteLine(SoundHelper.DetectSound()); henry todo open again
+                            Console.WriteLine(SoundHelper.DetectSound()); //henry todo sound check
                         }
 
 

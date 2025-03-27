@@ -10,12 +10,11 @@ namespace LogScreen.Utils
         {
             try
             {
-                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
-                if (!Directory.Exists(addressWithMonth))
+                if (!Directory.Exists(Setting.SCREEN_LOG_ADDRESS))
                 {
-                    Directory.CreateDirectory(addressWithMonth);
+                    Directory.CreateDirectory(Setting.SCREEN_LOG_ADDRESS);
                 }
-                return Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
+                return Path.Combine(Setting.SCREEN_LOG_ADDRESS);
             }
             catch (UnauthorizedAccessException)
             {
@@ -32,7 +31,7 @@ namespace LogScreen.Utils
         {
             try
             {
-                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
+                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS);
                 if (!Directory.Exists(addressWithMonth))
                 {
                     Directory.CreateDirectory(addressWithMonth);
