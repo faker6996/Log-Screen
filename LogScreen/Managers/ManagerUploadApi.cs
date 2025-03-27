@@ -78,13 +78,13 @@ namespace LogScreen.Managers
         /// <summary>
         /// set_up timer upload 
         /// </summary>
-        public void SetupUploadTimer()
+        public void SetupUploadTimer(int interval)
         {
             if (_uploadTimer == null)
             {
                 _uploadTimer = new Timer();
             }
-            _uploadTimer.Interval = 1 * 60 * 1000; // 30 phút (ms)
+            _uploadTimer.Interval = interval * 60 * 1000; // chu kỳ quét folder đẩy ảnh
             _uploadTimer.Tick += UploadTimer_Tick; // Gắn sự kiện Tick
             _uploadTimer.Start(); // Bắt đầu timer
         }
