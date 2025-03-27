@@ -32,7 +32,7 @@ namespace LogScreen
                     _managerUploadApi = new ManagerUploadApi();
                     _captureScheduler.SetupTimerWorkingTime(startTime, endTime, interval, actionQuantity, soundDetect);
 
-                    _managerUploadApi.SetupUploadTimer();
+                    _managerUploadApi.SetupUploadTimer(Int32.Parse(config.INTERVAL));
                     _managerUploadApi.SetupCheckValueTimer(Int32.Parse(config.LIVE_CAPTURE_CHECK_FREQUENT));
                 }
             }
