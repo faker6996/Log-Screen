@@ -6,13 +6,36 @@ namespace LogScreen.Utils
 {
     public static class FileHelper
     {
-        public static void CreateCaptureAddress(string captureAddress)
+        public static string GetCaptureAddress()
         {
             try
             {
-                if (!Directory.Exists(captureAddress))
+                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
+                if (!Directory.Exists(addressWithMonth))
                 {
-                    Directory.CreateDirectory(captureAddress);
+                    Directory.CreateDirectory(addressWithMonth);
+                }
+                return Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBox.Show("Error: Please run the application as Administrator to create the folder in Program Files.");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error creating folder: {ex.Message}");
+                return null;
+            }
+        }
+        public static void CreateMonitoringAddress()
+        {
+            try
+            {
+                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS, DateTime.Now.ToString($"yyyyMM"));
+                if (!Directory.Exists(addressWithMonth))
+                {
+                    Directory.CreateDirectory(addressWithMonth);
                 }
             }
             catch (UnauthorizedAccessException)

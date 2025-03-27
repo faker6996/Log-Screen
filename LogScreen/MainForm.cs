@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Configuration;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using LogScreen.Entities;
 using LogScreen.Managers;
 using LogScreen.Utils;
 
@@ -28,14 +25,15 @@ namespace LogScreen
                     TimeSpan endTime = TimeSpan.Parse(config.STOP);
                     int interval = Int32.Parse(config.INTERVAL) * 1000*60;
                     int actionQuantity = Int32.Parse(config.ACTION_QTY);
+                    bool soundDetect = config.SOUND_DETECT == "1" ? true : false;
 
                     _captureScheduler = new Scheduler();
-                    _captureScheduler.SetupTimerWorkingTime(startTime, endTime, interval, actionQuantity);
+                    _captureScheduler.SetupTimerWorkingTime(startTime, endTime, interval, actionQuantity, soundDetect);
                 }
             }
             catch (Exception ex)
             {
-
+                
             }
         }
 

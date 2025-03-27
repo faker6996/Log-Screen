@@ -8,29 +8,36 @@ using LogScreen.Utils;
 
 namespace LogScreen.Managers
 {
-    public static class ScreenshotManager
+    public class ScreenshotManager
     {
-        public static void CaptureAndSaveAllScreens()
+        public void CaptureAndSaveAllScreens(bool soundDetect)
         {
             try
             {
                 // Lấy danh sách tất cả màn hình
                 Screen[] screens = Screen.AllScreens;
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH'h'mm-ss");
-                FileHelper.CreateCaptureAddress(Setting.SCREEN_LOG_ADDRESS);
+                FileHelper.CreateMonitoringAddress();
                 // Chụp từng màn hình
                 for (int i = 0; i < screens.Length; i++)
                 {
                     Rectangle screenBounds = screens[i].Bounds;
                     using (Bitmap screenshot = new Bitmap(screenBounds.Width, screenBounds.Height))
                     {
+                        // henry todo sound detect
+                        if (soundDetect)
+                        {
+                            //Console.WriteLine(SoundHelper.DetectSound()); henry todo open again
+                        }
+
+
                         using (Graphics graphics = Graphics.FromImage(screenshot))
                         {
                             graphics.CopyFromScreen(screenBounds.X, screenBounds.Y, 0, 0, screenBounds.Size);
                         }
 
                         // Tạo tên file với suffix (_1, _2, ...)
-                        string filePath = Path.Combine(Setting.SCREEN_LOG_ADDRESS, $"Screenshot_{timestamp}_{i + 1}.jpg");
+                        string filePath = Path.Combine(FileHelper.GetCaptureAddress(), $"{timestamp}_{i + 1}.jpg");
 
                         // Lưu ảnh
                         ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
