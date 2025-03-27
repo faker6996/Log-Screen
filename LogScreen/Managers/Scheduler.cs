@@ -87,7 +87,7 @@ namespace LogScreen.Managers
             int nextTime = 0;
             for (int i = 0; i < _captureCount; i++)
             {
-                 nextTime = nextTime + _random.Next(_totalDuration / _actionQuantity);
+                nextTime = nextTime + _random.Next(_totalDuration / _actionQuantity);
                 _captureTimes.Add(nextTime);
                 Console.WriteLine($"i = {i}, nextTime = {nextTime}");
             }

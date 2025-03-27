@@ -1,8 +1,10 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using LogScreen.Utils;
 
@@ -10,10 +12,14 @@ namespace LogScreen.Managers
 {
     public class ScreenshotManager
     {
-        public void CaptureAndSaveAllScreens(bool soundDetect)
+        public List<string> CaptureAndSaveAllScreens(bool soundDetect)
         {
             try
             {
+
+                // Khởi tạo danh sách lưu đường dẫn ảnh
+                List<string> savedScreenshots = new List<string>();
+
                 // Lấy danh sách tất cả màn hình
                 Screen[] screens = Screen.AllScreens;
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH'h'mm-ss");
@@ -45,21 +51,28 @@ namespace LogScreen.Managers
                         encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 90L);
                         screenshot.Save(filePath, jpgEncoder, encoderParams);
 
+                        // Thêm đường dẫn ảnh vào danh sách
+                        savedScreenshots.Add(filePath);
+
                         // Cập nhật trạng thái
                         Console.WriteLine($"Saved: {Path.GetFileName(filePath)}");
                     }
                 }
 
+
                 if (screens.Length > 1)
                 {
                     Console.WriteLine($" (Total: {screens.Length} screens)");
                 }
+                return savedScreenshots;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
+                return null;
             }
         }
+
         private static ImageCodecInfo GetEncoder(ImageFormat format)
         {
             ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
@@ -72,8 +85,43 @@ namespace LogScreen.Managers
             }
             return null;
         }
+
+        /// <summary>
+        /// Lấy danh sách tất cả các đường dẫn ảnh đã lưu
+        /// </summary>
+        /// <returns>Danh sách các đường dẫn ảnh</returns>
+        public List<string> GetAllSavedScreenshots()
+        {
+            try
+            {
+                // Lấy đường dẫn thư mục lưu ảnh từ FileHelper
+                string captureDirectory = FileHelper.GetCaptureAddress();
+
+                // Kiểm tra nếu thư mục tồn tại
+                if (Directory.Exists(captureDirectory))
+                {
+                    // Lấy danh sách tất cả các file .jpg
+                    string[] files = Directory.GetFiles(captureDirectory, "*.jpg");
+
+                    Console.WriteLine($"Tìm thấy {files.Length} ảnh đã lưu.");
+                    return new List<string>(files); // Trả về danh sách file
+                }
+                else
+                {
+                    Console.WriteLine("Thư mục lưu ảnh không tồn tại.");
+                    return new List<string>(); // Trả về danh sách trống
+                }
+            }
+            catch (Exception ex)
+            {
+                FileHelper.LogError($"Lỗi khi đọc danh sách ảnh: {ex.Message}");
+                return new List<string>(); // Trả về danh sách trống khi xảy ra lỗi
+            }
+
+        }
     }
 }
+
 
 
 
