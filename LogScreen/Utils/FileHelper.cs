@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Management;
 using System.Windows.Forms;
 
 namespace LogScreen.Utils
@@ -78,5 +79,42 @@ namespace LogScreen.Utils
                 Console.WriteLine($"Failed to write to log file: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Lấy Windows ID (UUID của hệ điều hành)
+        /// </summary>
+        /// <returns>Windows ID dưới dạng chuỗi</returns>
+        public static string GetWindowsId()
+        {
+            try
+            {
+                string uuid = string.Empty;
+
+                // Kết nối đến WMI và lấy thông tin từ Win32_ComputerSystemProduct
+                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT UUID FROM Win32_ComputerSystemProduct"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        uuid = obj["UUID"]?.ToString();
+                        break; // Chỉ cần lấy giá trị đầu tiên
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(uuid))
+                {
+                    return uuid;
+                }
+                else
+                {
+                    throw new Exception("Không tìm thấy Windows ID.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy Windows ID: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
     }
 }
