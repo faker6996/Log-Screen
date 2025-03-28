@@ -76,7 +76,7 @@ namespace LogScreen.Utils
             // Kiểm tra nếu thư mục gốc không tồn tại
             if (!Directory.Exists(clickOnceRoot))
             {
-                Console.WriteLine("Không tìm thấy thư mục ClickOnce.");
+                FileHelper.LogError("Không tìm thấy thư mục ClickOnce.");
                 return null;
             }
 
@@ -103,7 +103,7 @@ namespace LogScreen.Utils
                     catch (UnauthorizedAccessException)
                     {
                         // Bỏ qua các thư mục không có quyền truy cập
-                        Console.WriteLine($"Không thể truy cập thư mục: {dir}. Bỏ qua.");
+                        FileHelper.LogError($"Không thể truy cập thư mục: {dir}. Bỏ qua.");
                         continue;
                     }
                 }
@@ -111,11 +111,11 @@ namespace LogScreen.Utils
             catch (Exception ex)
             {
                 // Xử lý các ngoại lệ khác
-                Console.WriteLine($"Đã xảy ra lỗi khi tìm file .exe: {ex.Message}");
+                FileHelper.LogError($"Đã xảy ra lỗi khi tìm file .exe: {ex.Message}");
             }
 
             // Trả về null nếu không tìm thấy file .exe
-            Console.WriteLine($"Không tìm thấy file {appName} trong thư mục ClickOnce.");
+            FileHelper.LogError($"Không tìm thấy file {appName} trong thư mục ClickOnce.");
             return null;
         }
     }

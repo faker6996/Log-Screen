@@ -88,7 +88,7 @@ namespace LogScreen.Managers
             {
                 if (config == null)
                 {
-                    Console.WriteLine("Đối tượng Config không hợp lệ.");
+                    FileHelper.LogError("Đối tượng Config không hợp lệ.");
                     return;
                 }
 
