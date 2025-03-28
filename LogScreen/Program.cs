@@ -16,6 +16,9 @@ namespace LogScreen
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            // Chạy ứng dụng mà không hiển thị Form
+            MainForm mainForm = new MainForm();
+
             Application.Run(new MainForm());
         }
     }
