@@ -12,5 +12,11 @@ namespace LogScreen.Utils
         public const int WORKING_TIMER_INTERVAL = 60000;  //HenryTodo: force 60000 - Khoảng cách giữa các lần kiểm tra xem có đang trong thời gian hoạt động theo config không
         public const int MIN_GAP_SCREEN_CAPTURE = 1000;  //Khoảng cách tối thiểu giữa 2 lần chụp
         public static string LOG_FILE_PATH = Path.Combine(Setting.SCREEN_LOG_ADDRESS, "MonitoringErrors.txt");
+
+
+        /// <summary>
+        /// FileName trong start up
+        /// </summary>
+        public static string FILE_NAME_START_UP = "Monitoring";
     }
 }
