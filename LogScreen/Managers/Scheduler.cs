@@ -44,6 +44,7 @@ namespace LogScreen.Managers
             _captureTimer.Tick += CaptureTimer_Tick;
 
             ResetCaptureTimes();
+            CaptureTimer_Tick(this, EventArgs.Empty);
             _captureTimer.Start();
         }
 
@@ -69,6 +70,9 @@ namespace LogScreen.Managers
                 finally
                 {
                     _isCapturing = false; // Đánh dấu hoàn thành
+
+                    //Henry todo: Icon blink
+                    IconHelper.BlinkIcon();
                 }
             }
 
@@ -87,7 +91,7 @@ namespace LogScreen.Managers
             int nextTime = 0;
             for (int i = 0; i < _captureCount; i++)
             {
-                 nextTime = nextTime + _random.Next(_totalDuration / _actionQuantity);
+                nextTime = nextTime + _random.Next(_totalDuration / _actionQuantity);
                 _captureTimes.Add(nextTime);
                 Console.WriteLine($"i = {i}, nextTime = {nextTime}");
             }

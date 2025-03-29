@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using LogScreen.Managers;
 using LogScreen.Utils;
@@ -11,9 +12,11 @@ namespace LogScreen
         public MainForm()
         {
             InitializeComponent();
-        }
+            // Gán icon mặc định
+            Initialize();
 
-        private async void MainForm_Load(object sender, EventArgs e)
+        }
+        private async void Initialize()
         {
             try
             {
@@ -23,7 +26,7 @@ namespace LogScreen
                 {
                     TimeSpan startTime = TimeSpan.Parse(config.START);
                     TimeSpan endTime = TimeSpan.Parse(config.STOP);
-                    int interval = Int32.Parse(config.INTERVAL) * 1000*60;
+                    int interval = Int32.Parse(config.INTERVAL) * 1000 * 60;
                     int actionQuantity = Int32.Parse(config.ACTION_QTY);
                     bool soundDetect = config.SOUND_DETECT == "1" ? true : false;
 
@@ -33,17 +36,8 @@ namespace LogScreen
             }
             catch (Exception ex)
             {
-                
-            }
-        }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if (_captureScheduler != null)
-            {
-                //_captureScheduler.DisposeTimerWorkingTime();
             }
-            base.OnFormClosing(e);
         }
     }
 }
