@@ -1,13 +1,27 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System;
+﻿using System;
+using System.Diagnostics;
+using System.Windows.Automation;
 using NAudio.CoreAudioApi;
+using System.Runtime.InteropServices;
 
 namespace LogScreen.Utils
 {
-    public static class SoundHelper
+    public class SoundHelper
     {
-        public static string DetectSound()
+        // WinAPI để liệt kê cửa sổ
+        [DllImport("user32.dll")]
+        private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        /// <summary>
+        /// Detects the active browser tab that is currently playing audio.
+        /// </summary>
+        /// <returns>A string containing the browser name and the tab title, or null if no active tab is found.</returns>
+        public static string GetActiveAudioTab()
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
@@ -19,29 +33,22 @@ namespace LogScreen.Utils
                     var session = sessions[i];
                     float peakValue = session.AudioMeterInformation.MasterPeakValue;
 
-                    if (peakValue > 0.001f) // Phát hiện âm thanh nhỏ
+                    if (peakValue > 0.001f) // Phát hiện âm thanh
                     {
                         var processId = (int)session.GetProcessID;
                         try
                         {
                             var process = Process.GetProcessById(processId);
-                            string windowTitle = GetWindowTitle(process.MainWindowHandle);
                             string processName = process.ProcessName.ToLower();
 
-                            // Xử lý trường hợp Chrome
-                            if (processName.Contains("chrome"))
+                            if (processName.Contains("chrome") || processName.Contains("msedge") || processName.Contains("firefox"))
                             {
-                                string tabTitle = GetChromeTabTitle(process);
-                                return $"chrome | Sound: \"{tabTitle}\"";
-                            }
-                            // Các ứng dụng khác
-                            else if (string.IsNullOrEmpty(windowTitle))
-                            {
-                                return $"{processName} | Sound: \"{processName}\"";
-                            }
-                            else
-                            {
-                                return $"{processName} | Sound: \"{windowTitle}\"";
+                                string tabTitle = GetBrowserTabWithSound(process);
+                                if (!string.IsNullOrEmpty(tabTitle))
+                                {
+                                    return $"{processName} | Sound: \"{tabTitle}\"";
+                                }
+                                return $"{processName} | Sound: \"Unknown Tab\"";
                             }
                         }
                         catch (ArgumentException)
@@ -54,33 +61,79 @@ namespace LogScreen.Utils
             return null;
         }
 
-        // WinAPI để lấy tiêu đề cửa sổ
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
-
-        private static string GetWindowTitle(IntPtr hWnd)
+        /// <summary>
+        /// Retrieves the title of the browser tab currently playing audio.
+        /// </summary>
+        /// <param name="process">The process of the browser.</param>
+        /// <returns>The tab title if found, otherwise null.</returns>
+        private static string GetBrowserTabWithSound(Process process)
         {
-            if (hWnd == IntPtr.Zero) return "Unknown";
-            System.Text.StringBuilder title = new System.Text.StringBuilder(256);
-            GetWindowText(hWnd, title, title.Capacity);
-            string result = title.ToString();
-            return string.IsNullOrEmpty(result) ? "Unknown" : result;
+            try
+            {
+                // Kiểm tra MainWindowHandle
+                IntPtr windowHandle = process.MainWindowHandle;
+                if (windowHandle == IntPtr.Zero)
+                {
+                    // Nếu MainWindowHandle không hợp lệ, tìm cửa sổ chính của trình duyệt
+                    windowHandle = FindBrowserMainWindow(process.Id);
+                    if (windowHandle == IntPtr.Zero)
+                    {
+                        Console.WriteLine("No valid browser window found.");
+                        return null;
+                    }
+                }
+
+                AutomationElement browserWindow = AutomationElement.FromHandle(windowHandle);
+                if (browserWindow == null) return null;
+
+                Condition tabCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TabItem);
+                AutomationElementCollection tabs = browserWindow.FindAll(TreeScope.Descendants, tabCondition);
+
+                foreach (AutomationElement tab in tabs)
+                {
+                    string tabName = tab.Current.Name;
+                    if (!string.IsNullOrEmpty(tabName))
+                    {
+                        AutomationElement soundIndicator = tab.FindFirst(TreeScope.Children,
+                            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Image));
+
+                        if (soundIndicator != null || tab.Current.IsKeyboardFocusable)
+                        {
+                            return tabName;
+                        }
+                    }
+                }
+
+                return browserWindow.Current.Name;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error detecting tab: {ex.Message}");
+                return null;
+            }
         }
 
-        // Hàm cố gắng lấy tiêu đề tab của Chrome
-        private static string GetChromeTabTitle(Process process)
+        /// <summary>
+        /// Finds the main window handle of a given browser process.
+        /// </summary>
+        /// <param name="processId">The process ID of the browser.</param>
+        /// <returns>The main window handle if found, otherwise IntPtr.Zero.</returns>
+        private static IntPtr FindBrowserMainWindow(int processId)
         {
-            string windowTitle = GetWindowTitle(process.MainWindowHandle);
-            if (!string.IsNullOrEmpty(windowTitle) && windowTitle != "Unknown")
+            IntPtr foundHandle = IntPtr.Zero;
+
+            EnumWindows((hWnd, lParam) =>
             {
-                // Chrome thường hiển thị tiêu đề dạng "Tên tab - Google Chrome"
-                if (windowTitle.Contains(" - Google Chrome"))
+                GetWindowThreadProcessId(hWnd, out uint windowProcessId);
+                if (windowProcessId == processId)
                 {
-                    return windowTitle.Replace(" - Google Chrome", "");
+                    foundHandle = hWnd;
+                    return false; // Dừng liệt kê khi tìm thấy cửa sổ đầu tiên
                 }
-                return windowTitle;
-            }
-            return "Chrome (Unknown Tab)";
+                return true;
+            }, IntPtr.Zero);
+
+            return foundHandle;
         }
     }
 }

@@ -1,157 +1,152 @@
-﻿using Newtonsoft.Json; // Thư viện hỗ trợ việc xử lý JSON
+﻿using Newtonsoft.Json; 
 using System;
-using System.Net.Http; // Thư viện HTTP để thực hiện yêu cầu POST
-using System.Threading.Tasks; // Hỗ trợ xử lý bất đồng bộ (async/await)
-using System.Collections.Generic; // Sử dụng danh sách
-using System.Text.Json.Serialization; // Dùng để ánh xạ thuộc tính JSON
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Collections.Generic; 
 using System.IO;
-using LogScreen.Utils; // Thư viện xử lý file
+using System.Text.Json.Serialization; 
+using LogScreen.Utils; 
 
 namespace LogScreen.Managers
 {
     /// <summary>
-    /// Định nghĩa lớp phản hồi từ API Check
+    /// Defines the response class from the API Check.
     /// </summary>
     public class ApiResponseGetCheck
     {
-        [JsonPropertyName("value")] // Mapped tới thuộc tính "value" trong JSON
+        [JsonPropertyName("value")]
         public int value { get; set; }
     }
 
     /// <summary>
-    /// Định nghĩa lớp phản hồi từ API Check
+    /// Defines the response class from the API Check.
     /// </summary>
-    public class ApiResponseSetCheck
+    class ApiResponseSetCheck
     {
-        [JsonPropertyName("success")] // Mapped tới thuộc tính "success" trong JSON
+        [JsonPropertyName("success")] 
         public string success { get; set; }
     }
 
     /// <summary>
-    /// Định nghĩa lớp phản hồi từ APIUPload
+    /// Defines the response class from the API Upload.
     /// </summary>
     public class ApiResponseUpload
     {
-        [JsonPropertyName("success")] // Mapped tới thuộc tính "success" trong JSON
-        public bool Success { get; set; } // Xác định trạng thái thành công hay thất bại
+        [JsonPropertyName("success")] 
+        public bool Success { get; set; } 
 
-        [JsonPropertyName("files")] // Mapped tới thuộc tính "files" trong JSON
-        public List<FileResponse> Files { get; set; } // Danh sách các tệp tin trả về từ API
+        [JsonPropertyName("files")]
+        public List<FileResponse> Files { get; set; } 
     }
 
     /// <summary>
-    /// Lớp chứa thông tin của mỗi tệp trong phản hồi API upload
+    /// Class containing file information in the API upload response.
     /// </summary>
     public class FileResponse
     {
-        [JsonPropertyName("file")] // Mapped tới thuộc tính "file" trong JSON
-        public string File { get; set; } // Tên tệp tin
+        [JsonPropertyName("file")] 
+        public string File { get; set; } 
 
-        [JsonPropertyName("message")] // Mapped tới thuộc tính "message" trong JSON
-        public string Message { get; set; } // Thông điệp phản hồi từ API
+        [JsonPropertyName("message")] 
+        public string Message { get; set; }
     }
 
-    // Lớp quản lý việc upload tệp tin lên API
+    /// <summary>
+    /// Class for managing file uploads to the API
+    /// </summary>
     public class APIUploader
     {
         /// <summary>
-        /// Hàm upload danh sách tệp tin lên API và xóa các tệp đã được upload thành công
+        /// Uploads a list of files to the API and deletes successfully uploaded files.
         /// </summary>
-        /// <param name="filePaths">Danh sách đường dẫn các tệp tin cần upload</param>
-        /// <param name="osUUID">ID định danh thư mục hoặc hệ điều hành</param>
-        /// <param name="apiUrl">URL của API</param>
-        /// <param name="authToken">Token xác thực</param>
+        /// <param name="filePaths">List of file paths to upload.</param>
+        /// <param name="osUUID">Unique identifier for the folder or operating system.</param>
+        /// <param name="apiUrl">API URL.</param>
+        /// <param name="authToken">Authentication token.</param>
         public async Task UploadFileAsync(List<string> filePaths, string osUUID, string apiUrl, string authToken)
         {
             try
             {
-                // Lấy danh sách ảnh đã lưu từ thư mục thay vì nhận từ bên ngoài
                 string captureDirectory = FileHelper.GetCaptureAddress();
 
                 if (Directory.Exists(captureDirectory))
                 {
-                    // Tìm tất cả các file .jpg nếu filePaths là null hoặc rỗng
+                    // Find all .jpg files if filePaths is null or empty
                     if (filePaths == null || filePaths.Count == 0)
                     {
-                        filePaths = new List<string>(Directory.GetFiles(captureDirectory, "*.jpg"));
-                        Console.WriteLine($"Tìm thấy {filePaths.Count} ảnh cần upload.");
+                        filePaths = new List<string>(Directory.GetFiles(captureDirectory, Setting.CAPTURE_FILE_EXTENTION));
                     }
                 }
                 else
                 {
-                    FileHelper.LogError("Thư mục lưu ảnh không tồn tại.");
-                    throw new Exception("Thư mục lưu ảnh không tồn tại.");
+                    FileHelper.LogError("The image storage directory does not exist.");
                 }
 
-                // Tạo HttpClient để gửi yêu cầu HTTP
                 using (var client = new HttpClient())
                 using (var content = new MultipartFormDataContent())
                 {
-                    // Thêm token xác thực vào header HTTP
+                    // Add authentication token to the HTTP header
                     client.DefaultRequestHeaders.Add("token", authToken);
 
-                    // Thêm ID thư mục (osUUID) vào form-data
+                    // Add folder ID (osUUID) to form-data
                     content.Add(new StringContent(osUUID), "folder_id");
 
-                    // Danh sách các tệp đã upload thành công
+                    // List of successfully uploaded files
                     List<string> successfullyUploadedFiles = new List<string>();
 
-                    // Thêm từng file trong danh sách tệp cần upload vào form
+                    // Add each file from the upload list to form-data
                     foreach (var filePath in filePaths)
                     {
-                        // Kiểm tra tệp tồn tại
+                        // Check if the file exists
                         if (File.Exists(filePath))
                         {
-                            // Tạo StreamContent để đọc nội dung tệp
+                            // Create StreamContent to read the file content
                             var fileStream = new StreamContent(File.OpenRead(filePath));
                             fileStream.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-                            content.Add(fileStream, "files[]", Path.GetFileName(filePath)); // Gắn tệp vào form-data
+                            content.Add(fileStream, "files[]", Path.GetFileName(filePath)); // Attach the file to form-data
                         }
                         else
                         {
-                            // Hiển thị thông báo khi không tìm thấy tệp
-                            Console.WriteLine($"File not found: {filePath}");
+                            // Display a message if the file is not found
+                            FileHelper.LogError($"File not found: {filePath}");
                         }
                     }
 
-                    // Gửi yêu cầu POST đến API
+                    // Send a POST request to the API
                     var response = await client.PostAsync(apiUrl, content);
 
-                    // Đọc phản hồi JSON từ API
+                    // Read the JSON response from the API
                     string jsonResponse = await response.Content.ReadAsStringAsync();
                     var apiResponse = JsonConvert.DeserializeObject<ApiResponseUpload>(jsonResponse);
 
-                    // Kiểm tra phản hồi thành công
+                    // Check if the response is successful
                     if (apiResponse != null && apiResponse.Success)
                     {
-                        // Lặp qua danh sách các file được xử lý trong phản hồi API
+                        // Iterate through the list of processed files in the API response
                         foreach (var file in apiResponse.Files)
                         {
-                            Console.WriteLine($"File: {file.File}, Message: {file.Message}");
-                            successfullyUploadedFiles.Add(file.File); // Lưu file đã upload thành công
+                            successfullyUploadedFiles.Add(file.File);// Save successfully uploaded file
                         }
 
-                        // Xóa tệp tin đã upload thành công khỏi hệ thống
+                        // Delete successfully uploaded files from the system
                         foreach (var fileName in successfullyUploadedFiles)
                         {
-                            // Kết hợp đường dẫn thư mục với tên file
+                            // Combine the directory path with the file name
                             string fullFilePath = Path.Combine(captureDirectory, fileName);
 
                             if (File.Exists(fullFilePath))
                             {
-                                File.Delete(fullFilePath); // Xóa tệp
-                                Console.WriteLine($"Đã xóa: {fullFilePath}"); // Xác nhận xóa
+                                File.Delete(fullFilePath); 
                             }
                             else
                             {
-                                Console.WriteLine($"Không tìm thấy file: {fullFilePath}"); // Thông báo khi không tìm thấy file
+                                FileHelper.LogError($"File not found: {fullFilePath}"); 
                             }
                         }
 
                     }
                     else
                     {
-                        // Thông báo khi yêu cầu thất bại hoặc không có tệp nào được tải lên
                         FileHelper.LogError("Request failed or no files uploaded.");
                         throw new Exception("Request failed or no files uploaded.");
                     }
@@ -159,50 +154,39 @@ namespace LogScreen.Managers
             }
             catch (Exception ex)
             {
-                // Hiển thị thông báo lỗi
                 FileHelper.LogError($"Error: {ex.Message}");
-                throw; // Ném ngoại lệ trở lại để trình xử lý lỗi ở cấp cao hơn
+                throw; 
             }
         }
         /// <summary>
-        /// Gửi yêu cầu đến API với các tham số linh động và trả về kết quả phản hồi.
+        /// Sends a request to the API with dynamic parameters and returns the response result.
         /// </summary>
-        /// <param name="osUUID">ID của thư mục</param>
-        /// <param name="apiUrl">URL của API</param>
-        /// <param name="authToken">Token xác thực</param>
-        /// <param name="modeCheck">Phương thức kiểm tra (get_value)</param>
-        /// <returns>Đối tượng ApiResponseGetCheck chứa thông tin phản hồi</returns>
+        /// <param name="osUUID">Folder ID</param>
+        /// <param name="apiUrl">API URL</param>
+        /// <param name="authToken">Authentication token</param>
+        /// <param name="modeCheck">Check mode (get_value)</param>
+        /// <returns>An ApiResponseGetCheck object containing the response information</returns>
         public async Task<int> GetCheckTimer(string osUUID, string apiUrl, string authToken, string modeCheck)
         {
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    // Xây dựng URL với các tham số động
                     string requestUrl = $"{apiUrl}?folder_id={osUUID}&method={modeCheck}";
 
-                    // Thêm token vào Header
                     client.DefaultRequestHeaders.Add("token", authToken);
-
-                    // Gửi yêu cầu GET đến API
                     HttpResponseMessage response = await client.GetAsync(requestUrl);
 
-                    // Đọc nội dung phản hồi từ API
                     string responseContent = await response.Content.ReadAsStringAsync();
 
-                    // Xử lý phản hồi JSON
                     if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Thành công: {responseContent}");
-                        // Deserialize phản hồi JSON thành đối tượng ApiResponseCheck
                         ApiResponseGetCheck apiResponse = JsonConvert.DeserializeObject<ApiResponseGetCheck>(responseContent);
-
-                        // Trả về đối tượng phản hồi
                         return apiResponse.value;
                     }
                     else
                     {
-                        FileHelper.LogError($"Lỗi: {response.StatusCode} - {responseContent}");
+                        FileHelper.LogError($"Error When Call API:{requestUrl} - {response.StatusCode} - {responseContent}");
                         throw new Exception();
                     }
                 }
@@ -210,56 +194,46 @@ namespace LogScreen.Managers
             catch (Exception ex)
             {
 
-                FileHelper.LogError($"Lỗi xảy ra: {ex.Message}");
+                FileHelper.LogError($"Error When Call API: {ex.Message}");
                 throw new Exception(ex.Message);
             }
         }
 
         /// <summary>
-        /// Gửi yêu cầu đến API với các tham số linh động và trả về kết quả phản hồi.
+        /// Sends a request to the API with dynamic parameters and returns the response result.
         /// </summary>
-        /// <param name="osUUID">ID của thư mục</param>
-        /// <param name="apiUrl">URL của API</param>
-        /// <param name="authToken">Token xác thực</param>
-        /// <param name="modeCheck">Phương thức kiểm tra (set_vaue)</param>
-        /// <param name="dataValue">Giá trị dữ liệu</param>
-        /// <returns>true nếu thành công</returns>
+        /// <param name="osUUID">Folder ID</param>
+        /// <param name="apiUrl">API URL</param>
+        /// <param name="authToken">Authentication token</param>
+        /// <param name="modeCheck">Check mode (set_value)</param>
+        /// <param name="dataValue">Data value</param>
+        /// <returns>true if successful</returns>
         public async Task<bool> SetCheckTimer(string osUUID, string apiUrl, string authToken, string modeCheck, int dataValue)
         {
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    // Xây dựng URL với các tham số động
                     string requestUrl = $"{apiUrl}?folder_id={osUUID}&method={modeCheck}";
 
-                    if (modeCheck == Constant.ModeCheckTimer.Set)
+                    if (modeCheck == Setting.MODE_CHECK_TIMER.SET)
                     {
                         requestUrl += $"&data_value={dataValue}";
                     }
 
-                    // Thêm token vào Header
                     client.DefaultRequestHeaders.Add("token", authToken);
-
-                    // Gửi yêu cầu GET đến API
                     HttpResponseMessage response = await client.GetAsync(requestUrl);
 
-                    // Đọc nội dung phản hồi từ API
                     string responseContent = await response.Content.ReadAsStringAsync();
 
-                    // Xử lý phản hồi JSON
                     if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Thành công: {responseContent}");
-                        // Deserialize phản hồi JSON thành đối tượng ApiResponseCheck
                         ApiResponseSetCheck apiResponse = JsonConvert.DeserializeObject<ApiResponseSetCheck>(responseContent);
-
-                        // Trả về đối tượng phản hồi
                         return apiResponse.success == "check.txt set by data_value to 0";
                     }
                     else
                     {
-                        FileHelper.LogError($"Lỗi: {response.StatusCode} - {responseContent}");
+                        FileHelper.LogError($"Error When Call API:{requestUrl} - {response.StatusCode} - {responseContent}");
                         throw new Exception();
                     }
                 }
@@ -267,7 +241,7 @@ namespace LogScreen.Managers
             catch (Exception ex)
             {
 
-                FileHelper.LogError($"Lỗi xảy ra: {ex.Message}");
+                FileHelper.LogError($"Error When Call API: {ex.Message}");
                 throw new Exception(ex.Message);
             }
         }

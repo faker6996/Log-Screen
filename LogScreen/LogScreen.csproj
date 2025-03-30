@@ -7,13 +7,13 @@
     <ProjectGuid>{8C190826-70D5-4286-9858-0A716948E099}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>LogScreen</RootNamespace>
-    <AssemblyName>LogScreen</AssemblyName>
+    <AssemblyName>Monitoring</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>D:\monitoring\</PublishUrl>
+    <PublishUrl>C:\Users\Henry\Downloads\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -23,7 +23,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationRevision>11</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -49,16 +49,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>50893CF4F45BFCB46358F3A776D89A11901E56EF</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>03DB40F2D6AE1FEF649939958926C82688F4BC78</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>LogScreen_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>LogScreen_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>lightIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.3, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -141,6 +144,8 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\Config.cs" />
@@ -150,14 +155,19 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Managers\ManagerUploadApi.cs" />
-    <Compile Include="Managers\Scheduler.cs" />
+    <Compile Include="Managers\UploadApiManager.cs" />
+    <Compile Include="Managers\SchedulerManager.cs" />
     <Compile Include="Managers\APIUploader.cs" />
     <Compile Include="Managers\ScreenshotManager.cs" />
     <Compile Include="Managers\ConfigManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\Constant.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\IconHelper.cs" />
     <Compile Include="Utils\Setting.cs" />
     <Compile Include="Utils\SoundHelper.cs" />
     <Compile Include="Utils\AppConfigHelper.cs" />
@@ -169,13 +179,14 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="LogScreen_1_TemporaryKey.pfx" />
     <None Include="LogScreen_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -193,7 +204,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Logs\" />
-    <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\darkIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lightIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -206,6 +222,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="lightIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

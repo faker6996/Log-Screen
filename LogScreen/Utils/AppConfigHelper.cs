@@ -1,5 +1,4 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 
 
 namespace LogScreen.Utils
@@ -7,49 +6,43 @@ namespace LogScreen.Utils
     public static class AppConfigHelper
     {
         /// <summary>
-        /// Hàm đọc giá trị từ App.config
+        /// Reads a value from the App.config file.
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <param name="key">The key of the configuration setting.</param>
+        /// <returns>The corresponding value as a string.</returns>
         public static string ReadAppConfig(string key)
         {
-            // Kiểm tra nếu key tồn tại trong App.config
+            // Check if the key exists in App.config
             if (ConfigurationManager.AppSettings[key] != null)
             {
-                return ConfigurationManager.AppSettings[key]; // Trả về giá trị của key
+                return ConfigurationManager.AppSettings[key];
             }
             else
             {
-                Console.WriteLine($"Không tìm thấy key '{key}' trong App.config.");
+                FileHelper.LogError($"Key '{key}' not found in App.config.");
                 return null;
             }
         }
 
         /// <summary>
-        /// Hàm ghi hoặc cập nhật giá trị vào App.config
+        /// Function to write or update a value in App.config
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="key">The configuration key</param>
+        /// <param name="value">The value to be set</param>
         public static void WriteAppConfig(string key, string value)
         {
-            // Mở App.config
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
-            // Kiểm tra nếu key đã tồn tại
             if (config.AppSettings.Settings[key] != null)
             {
-                config.AppSettings.Settings[key].Value = value; // Cập nhật giá trị
-                Console.WriteLine($"Đã cập nhật key '{key}' với giá trị '{value}' vào App.config.");
+                config.AppSettings.Settings[key].Value = value; 
             }
             else
             {
-                config.AppSettings.Settings.Add(key, value); // Thêm key mới
-                Console.WriteLine($"Đã thêm key '{key}' với giá trị '{value}' vào App.config.");
+                config.AppSettings.Settings.Add(key, value);
             }
-
-            // Lưu thay đổi
             config.Save(ConfigurationSaveMode.Modified);
-            ConfigurationManager.RefreshSection("appSettings"); // Làm mới section để áp dụng thay đổi
+            ConfigurationManager.RefreshSection("appSettings");
         }
     }
 }

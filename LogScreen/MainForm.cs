@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using LogScreen.Entities;
 using LogScreen.Managers;
@@ -8,61 +9,42 @@ namespace LogScreen
 {
     public partial class MainForm : Form
     {
-        Scheduler _captureScheduler;
-        ManagerUploadApi _managerUploadApi;
+        SchedulerManager _captureScheduler;
+        UploadApiManager _managerUploadApi;
         public MainForm()
         {
             InitializeComponent();
+            Initialize();
         }
-
-        private async void MainForm_Load(object sender, EventArgs e)
+        private async void Initialize()
         {
             try
             {
-                // mặc định sẽ khởi chạy cùng windows
+                // By default, monitoring app will start with Windows
                 WinAPIHelper.SetStartup(Setting.FILE_NAME_START_UP);
+                var config = await ConfigManager.GetConfigFromUrlAsync(Setting.CONFIG_URL) ?? ConfigManager.GetDefaultConfig();
 
-
-                var config = await ConfigManager.GetConfigFromUrlAsync(Setting.CONFIG_URL) ?? ConfigManager.GetConfigDefault();
-
-                // tắt khởi chạy cùng windows
+                // Turn of run monitoring app when start window
                 if (config.START_WITH_WINDOW == "0")
                 {
                     WinAPIHelper.RemoveStartup(Setting.FILE_NAME_START_UP);
                 }
 
-                TimeSpan startTime = TimeSpan.Parse(config.START);
-                TimeSpan endTime = TimeSpan.Parse(config.STOP);
-                int interval = Int32.Parse(config.INTERVAL) * 1000 * 60;
-                int actionQuantity = Int32.Parse(config.ACTION_QTY);
-                bool soundDetect = config.SOUND_DETECT == "1" ? true : false;
+                // Create a context menu for the NotifyIcon
+                IconHelper.InitIcon(config);
 
-                _captureScheduler = new Scheduler();
-                _managerUploadApi = new ManagerUploadApi();
-                _captureScheduler.SetupTimerWorkingTime(startTime, endTime, interval, actionQuantity, soundDetect);
+                _captureScheduler = new SchedulerManager(config);
+                _captureScheduler.SetupTimerWorkingTime();
 
+                _managerUploadApi = new UploadApiManager(config);
                 _managerUploadApi.SetupUploadTimer(Int32.Parse(config.INTERVAL));
                 _managerUploadApi.SetupCheckValueTimer(Int32.Parse(config.LIVE_CAPTURE_CHECK_FREQUENT));
 
             }
             catch (Exception ex)
             {
-
+                FileHelper.LogError($"{ex}");
             }
-        }
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true; // Ngăn việc đóng ứng dụng
-            MessageBox.Show("Ứng dụng này không thể bị đóng.");
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if (_captureScheduler != null)
-            {
-                //_captureScheduler.DisposeTimerWorkingTime();
-            }
-            base.OnFormClosing(e);
         }
     }
 }
