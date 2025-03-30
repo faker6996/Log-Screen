@@ -1,11 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Management;
 using System.Windows.Forms;
 
 namespace LogScreen.Utils
 {
     public static class FileHelper
     {
+        /// <summary>
+        /// Retrieves the capture address, ensuring the directory exists.
+        /// </summary>
+        /// <returns>Capture directory path or null if an error occurs.</returns>
         public static string GetCaptureAddress()
         {
             try
@@ -27,44 +32,33 @@ namespace LogScreen.Utils
                 return null;
             }
         }
+
+        /// <summary>
+        /// Creates the monitoring address if it does not already exist.
+        /// </summary>
         public static void CreateMonitoringAddress()
         {
             try
             {
-                var addressWithMonth = Path.Combine(Setting.SCREEN_LOG_ADDRESS);
-                if (!Directory.Exists(addressWithMonth))
+                if (!Directory.Exists(Setting.SCREEN_LOG_ADDRESS))
                 {
-                    Directory.CreateDirectory(addressWithMonth);
+                    Directory.CreateDirectory(Setting.SCREEN_LOG_ADDRESS);
                 }
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show("Error: Please run the application as Administrator to create the folder in Program Files.");
+                FileHelper.LogError("Please run the application as Administrator to create the folder in Program Files");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error creating folder: {ex.Message}");
+                FileHelper.LogError($"Error creating folder: {ex.Message}");
             }
         }
-        public static void CreateErrorLogFile(string errorLogAddress)
-        {
-            try
-            {
-                if (!Directory.Exists(errorLogAddress))
-                {
-                    Directory.CreateDirectory(errorLogAddress);
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                MessageBox.Show("Error: Please run the application as Administrator to create the folder in Program Files.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error creating folder: {ex.Message}");
-            }
-        }
-        // Hàm ghi log vào file txt
+
+        /// <summary>
+        /// Logs an error message to a log file.
+        /// </summary>
+        /// <param name="message">The error message to log.</param>
         public static void LogError(string message)
         {
             try
@@ -74,9 +68,45 @@ namespace LogScreen.Utils
             }
             catch (Exception ex)
             {
-                // Nếu ghi log thất bại, có thể bỏ qua hoặc xử lý thêm
                 Console.WriteLine($"Failed to write to log file: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Retrieves the Windows ID (Operating System UUID).
+        /// </summary>
+        /// <returns>Windows ID as a string.</returns>
+        public static string GetWindowsId()
+        {
+            try
+            {
+                string uuid = string.Empty;
+
+                // Connect to WMI and retrieve information from Win32_ComputerSystemProduct
+                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT UUID FROM Win32_ComputerSystemProduct"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        uuid = obj["UUID"]?.ToString();
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(uuid))
+                {
+                    return uuid;
+                }
+                else
+                {
+                    throw new Exception("Not Found Windows ID");
+                }
+            }
+            catch (Exception ex)
+            {
+                FileHelper.LogError($"Error When Get Window ID: {ex}");
+                return string.Empty;
+            }
+        }
+
     }
 }

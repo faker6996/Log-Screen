@@ -5,13 +5,13 @@ using System;
 using Newtonsoft.Json;
 using System.IO;
 using LogScreen.Utils;
+using System.Collections.Generic;
 
 namespace LogScreen.Managers
 {
     public static class ConfigManager
     {
-
-        // Đảm bảo thư mục log tồn tại
+        // Static constructor to ensure the configuration directory exists
         static ConfigManager()
         {
             if (!Directory.Exists(Setting.SCREEN_LOG_ADDRESS))
@@ -19,18 +19,23 @@ namespace LogScreen.Managers
                 Directory.CreateDirectory(Setting.SCREEN_LOG_ADDRESS);
             }
         }
-
-        public static async Task<Config> GetConfigFromUrlAsync(string url, int retryDelayMs = 5000, int maxRetries = -1)
+        /// <summary>
+        /// Fetches the configuration from a given URL.
+        /// Tries multiple times in case of failure.
+        /// </summary>
+        /// <param name="url">The URL to fetch the configuration from.</param>
+        /// <returns>The configuration object if successful, otherwise null.</returns>
+        public static async Task<Config> GetConfigFromUrlAsync(string url)
         {
-            int attempt = 0;
+            int numOfTries = 0;
 
-            while (true) // Lặp vô hạn hoặc đến khi đạt maxRetries
+            while (numOfTries < Setting.TRY_GET_CONFIG.MAX_REP)
             {
                 try
                 {
                     if (string.IsNullOrEmpty(url))
                     {
-                        FileHelper.LogError("Not found ConfigUrl");
+                        FileHelper.LogError("ConfigUrl not found.");
                         return null;
                     }
 
@@ -41,33 +46,84 @@ namespace LogScreen.Managers
                         string configContent = await response.Content.ReadAsStringAsync();
                         Config config = ParseConfig(configContent);
 
-                        if (config != null) // Thành công thì trả về config
+                        if (config != null)
                         {
-                            return config;
+                            OverrideDefaultConfig(config);
                         }
+                        return config;
                     }
                 }
                 catch (Exception ex)
                 {
-                    attempt++;
-                    string errorMessage = $"Attempt {attempt}: Error when read config - {ex.Message}";
-
-                    // Ghi lỗi vào file log
-                    FileHelper.LogError(errorMessage);
-
-                    // Nếu đạt tối đa số lần thử
-                    if (maxRetries > 0 && attempt >= maxRetries)
-                    {
-                        FileHelper.LogError("Max retries reached. Unable to fetch config.");
-                        return null;
-                    }
+                    numOfTries++;
+                    FileHelper.LogError($"Attempt #{numOfTries}: Error reading configuration - {ex.Message}");
                 }
 
-                // Chờ trước khi thử lại
-                await Task.Delay(retryDelayMs);
+                await Task.Delay(Setting.TRY_GET_CONFIG.INTERVAL);
+            }
+
+            FileHelper.LogError("Maximum number of attempts reached. Unable to load configuration.");
+            return null;
+        }
+        /// <summary>
+        /// Retrieves the default configuration values from the application settings.
+        /// </summary>
+        /// <returns>A Config object populated with default values.</returns>
+        public static Config GetDefaultConfig()
+        {
+            return new Config()
+            {
+                START = AppConfigHelper.ReadAppConfig(nameof(Config.START)),
+                STOP = AppConfigHelper.ReadAppConfig(nameof(Config.STOP)),
+                INTERVAL = AppConfigHelper.ReadAppConfig(nameof(Config.INTERVAL)),
+                ACTION_QTY = AppConfigHelper.ReadAppConfig(nameof(Config.ACTION_QTY)),
+                START_WITH_WINDOW = AppConfigHelper.ReadAppConfig(nameof(Config.START_WITH_WINDOW)),
+                ALLOW_FORCE_ENDTASK = AppConfigHelper.ReadAppConfig(nameof(Config.ALLOW_FORCE_ENDTASK)),
+                LIVE_CAPTURE_CHECK_FREQUENT = AppConfigHelper.ReadAppConfig(nameof(Config.LIVE_CAPTURE_CHECK_FREQUENT)),
+                SOUND_DETECT = AppConfigHelper.ReadAppConfig(nameof(Config.SOUND_DETECT))
+            };
+        }
+        /// <summary>
+        /// Overrides the default configuration with the values from the provided config object.
+        /// </summary>
+        /// <param name="config">The new configuration object.</param>
+        public static void OverrideDefaultConfig(Config config)
+        {
+            try
+            {
+                if (config == null)
+                {
+                    FileHelper.LogError("Invalid Config object.");
+                    return;
+                }
+
+                Dictionary<string, string> configValues = new Dictionary<string, string>
+                {
+                    { nameof(Config.START), config.START },
+                    { nameof(Config.STOP), config.STOP },
+                    { nameof(Config.INTERVAL), config.INTERVAL },
+                    { nameof(Config.ACTION_QTY), config.ACTION_QTY },
+                    { nameof(Config.START_WITH_WINDOW), config.START_WITH_WINDOW },
+                    { nameof(Config.ALLOW_FORCE_ENDTASK), config.ALLOW_FORCE_ENDTASK },
+                    { nameof(Config.LIVE_CAPTURE_CHECK_FREQUENT), config.LIVE_CAPTURE_CHECK_FREQUENT },
+                    { nameof(Config.SOUND_DETECT), config.SOUND_DETECT }
+                };
+
+                foreach (var pair in configValues)
+                {
+                    AppConfigHelper.WriteAppConfig(pair.Key, pair.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                FileHelper.LogError($"An error occurred while writing default values to App.config: {ex.Message}");
             }
         }
-
+        /// <summary>
+        /// Parses the configuration from a JSON string.
+        /// </summary>
+        /// <param name="configContent">The JSON string containing the configuration.</param>
+        /// <returns>A Config object if parsing is successful, otherwise null.</returns>
         private static Config ParseConfig(string configContent)
         {
             try
@@ -81,7 +137,5 @@ namespace LogScreen.Managers
                 return null;
             }
         }
-
-        
     }
 }

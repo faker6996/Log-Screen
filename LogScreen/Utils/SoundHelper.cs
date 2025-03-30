@@ -17,6 +17,10 @@ namespace LogScreen.Utils
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
+        /// <summary>
+        /// Detects the active browser tab that is currently playing audio.
+        /// </summary>
+        /// <returns>A string containing the browser name and the tab title, or null if no active tab is found.</returns>
         public static string GetActiveAudioTab()
         {
             using (var enumerator = new MMDeviceEnumerator())
@@ -57,6 +61,11 @@ namespace LogScreen.Utils
             return null;
         }
 
+        /// <summary>
+        /// Retrieves the title of the browser tab currently playing audio.
+        /// </summary>
+        /// <param name="process">The process of the browser.</param>
+        /// <returns>The tab title if found, otherwise null.</returns>
         private static string GetBrowserTabWithSound(Process process)
         {
             try
@@ -104,7 +113,11 @@ namespace LogScreen.Utils
             }
         }
 
-        // Hàm tìm cửa sổ chính của trình duyệt
+        /// <summary>
+        /// Finds the main window handle of a given browser process.
+        /// </summary>
+        /// <param name="processId">The process ID of the browser.</param>
+        /// <returns>The main window handle if found, otherwise IntPtr.Zero.</returns>
         private static IntPtr FindBrowserMainWindow(int processId)
         {
             IntPtr foundHandle = IntPtr.Zero;

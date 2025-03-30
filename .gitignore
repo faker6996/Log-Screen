@@ -10,6 +10,7 @@ obj/
 *.vs/
 *.vscode/
 *.sln.docstates
+*.pfx
 
 # NuGet Packages
 *.nupkg
