@@ -22,7 +22,7 @@ namespace LogScreen.Utils
         /// <summary>
         /// FileName trong start up
         /// </summary>
-        public static string FILE_NAME_START_UP = "Monitoring";
+        public static string FILE_NAME_START_UP = "LogScreen";
         public static string APP_NAME_EXE = "LogScreen.exe";
         public static string CAPTURE_FILE_EXTENTION = "*.jpg";
 
