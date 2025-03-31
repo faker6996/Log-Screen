@@ -140,10 +140,10 @@ namespace LogScreen.Managers
             DateTime now = DateTime.Now;
             TimeSpan currentTime = now.TimeOfDay;
 
-            bool isInActivePeriod = (_startTime < _endTime && currentTime >= _startTime && currentTime <= _endTime) ||
-                                    (_startTime > _endTime && (currentTime <= _startTime || currentTime >= _endTime));
+            bool isOnActivePeriod = (_startTime < _endTime && currentTime >= _startTime && currentTime <= _endTime) ||
+                                    (_startTime > _endTime && (currentTime >= _startTime || currentTime <= _endTime));
 
-            if (isInActivePeriod)
+            if (isOnActivePeriod)
             {
                 StartCaptureIfNecessary();
             }

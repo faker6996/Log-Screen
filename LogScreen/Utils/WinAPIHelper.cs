@@ -10,7 +10,7 @@ namespace LogScreen.Utils
         /// Adds the application to the startup list with Windows.
         /// </summary>
         /// <param name="appName">The name of the application.</param>
-        public static void SetStartup(string appName = "Monitoring")
+        public static void SetStartup(string appName)
         {
             // Find the .exe file path of the Monitoring application
             var exePath = WinAPIHelper.FindClickOnceExe(Setting.APP_NAME_EXE);

@@ -14,55 +14,45 @@ namespace LogScreen.Managers
         {
             try
             {
-                // Initialize a list to store image file paths
-                List<string> savedScreenshots = new List<string>();
-
-                // Get a list of all screens
-                Screen[] screens = Screen.AllScreens;
+                var savedScreenshots = new List<string>();
+                var screens = Screen.AllScreens;
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH'h'mm-ss");
                 FileHelper.CreateMonitoringAddress();
+                string captureDir = FileHelper.GetCaptureAddress();
 
-                // Capture each screen
-                for (int i = 0; i < screens.Length; i++)
+                var jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+                using (var encoderParams = new EncoderParameters(1))
                 {
-                    Rectangle screenBounds = screens[i].Bounds;
-                    using (Bitmap screenshot = new Bitmap(screenBounds.Width, screenBounds.Height))
-                    {
-                        using (Graphics graphics = Graphics.FromImage(screenshot))
-                        {
-                            // Capture the screen
-                            graphics.CopyFromScreen(screenBounds.X, screenBounds.Y, 0, 0, screenBounds.Size);
+                    encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 90L);
 
-                            // Check for sound activity and add a watermark if needed
+                    for (int i = 0; i < screens.Length; i++)
+                    {
+                        Rectangle bounds = screens[i].Bounds;
+                        using (var screenshot = new Bitmap(bounds.Width, bounds.Height))
+                        using (var graphics = Graphics.FromImage(screenshot))
+                        {
+                            graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
+
                             if (soundDetect)
                             {
                                 string audioInfo = SoundHelper.GetActiveAudioTab();
                                 if (!string.IsNullOrEmpty(audioInfo))
                                 {
-                                    // Add watermark with audioInfo in the top-right corner
-                                    AddWatermark(graphics, audioInfo, screenBounds.Width);
+                                    AddWatermark(graphics, audioInfo, bounds.Width);
                                 }
                             }
+
+                            string filePath = Path.Combine(captureDir, $"{timestamp}_{i + 1}.jpg");
+                            screenshot.Save(filePath, jpgEncoder, encoderParams);
+                            savedScreenshots.Add(filePath);
                         }
-
-                        // Create a filename with suffix (_1, _2, ...)
-                        string filePath = Path.Combine(FileHelper.GetCaptureAddress(), $"{timestamp}_{i + 1}.jpg");
-
-                        // Save the image
-                        ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
-                        EncoderParameters encoderParams = new EncoderParameters(1);
-                        encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 90L);
-                        screenshot.Save(filePath, jpgEncoder, encoderParams);
-
-                        // Add the image path to the list
-                        savedScreenshots.Add(filePath);
                     }
                 }
                 return savedScreenshots;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                FileHelper.LogError($"Error: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
         }
@@ -76,20 +66,19 @@ namespace LogScreen.Managers
 
         private void AddWatermark(Graphics graphics, string watermarkText, int screenWidth)
         {
-            Font font = new Font("Arial", 12, FontStyle.Bold);
-            Brush brush = new SolidBrush(Color.White);
-            SizeF textSize = graphics.MeasureString(watermarkText, font);
+            using (Font font = new Font("Arial", 12, FontStyle.Bold))
+            using (Brush brush = new SolidBrush(Color.White))
+            {
+                SizeF textSize = graphics.MeasureString(watermarkText, font);
+                float x = screenWidth - textSize.Width - 10;
+                float y = 10;
 
-            // Calculate the position for the top-right corner (10px margin from the right and top)
-            float x = screenWidth - textSize.Width - 10;
-            float y = 10; // Adjust this to place it at the bottom if needed
-
-            // Add a semi-transparent background for readability
-            RectangleF background = new RectangleF(x - 5, y - 5, textSize.Width + 10, textSize.Height + 10);
-            graphics.FillRectangle(new SolidBrush(Color.FromArgb(128, 0, 0, 0)), background);
-
-            // Draw the watermark
-            graphics.DrawString(watermarkText, font, brush, x, y);
+                using (Brush bgBrush = new SolidBrush(Color.FromArgb(128, 0, 0, 0)))
+                {
+                    graphics.FillRectangle(bgBrush, x - 5, y - 5, textSize.Width + 10, textSize.Height + 10);
+                }
+                graphics.DrawString(watermarkText, font, brush, x, y);
+            }
         }
 
         /// <summary>
@@ -102,8 +91,7 @@ namespace LogScreen.Managers
         /// </returns>
         private static ImageCodecInfo GetEncoder(ImageFormat format)
         {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
-            foreach (ImageCodecInfo codec in codecs)
+            foreach (var codec in ImageCodecInfo.GetImageEncoders())
             {
                 if (codec.FormatID == format.Guid)
                 {
@@ -121,27 +109,15 @@ namespace LogScreen.Managers
         {
             try
             {
-                // Get the image storage directory path from FileHelper
                 string captureDirectory = FileHelper.GetCaptureAddress();
-
-                // Check if the directory exists
-                if (Directory.Exists(captureDirectory))
-                {
-                    // Get all .jpg files in the directory
-                    string[] files = Directory.GetFiles(captureDirectory, "*.jpg");
-
-                    return new List<string>(files); // Return the list of image files
-                }
-                else
-                {
-                    FileHelper.LogError("The image storage directory does not exist.");
-                    return new List<string>(); // Return an empty list
-                }
+                return Directory.Exists(captureDirectory)
+                    ? new List<string>(Directory.GetFiles(captureDirectory, "*.jpg"))
+                    : new List<string>();
             }
             catch (Exception ex)
             {
-                FileHelper.LogError($"Error retrieving image list: {ex.Message}");
-                return new List<string>(); // Return an empty list in case of an error
+                FileHelper.LogError($"Error retrieving image list: {ex.Message}\n{ex.StackTrace}");
+                return new List<string>();
             }
         }
     }
