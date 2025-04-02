@@ -29,7 +29,7 @@ namespace LogScreen.Utils
         /// <summary>
         /// Token để call các api upload
         /// </summary>
-        public const string TOKEN = "a6d47a15-17f9-4824-b66d-42aa28023882d";
+        public const string TOKEN = "a6d47a15-17f9-4824-b66d-42aa28023882";
 
         #endregion
 
