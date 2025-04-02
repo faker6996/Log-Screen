@@ -195,21 +195,25 @@ namespace LogScreen.Managers
                     HttpResponseMessage response = await client.GetAsync(requestUrl);
 
                     string responseContent = await response.Content.ReadAsStringAsync();
+                    // Cắt bỏ phần trước chuỗi {"value":0}
+                    int startIndex = responseContent.IndexOf("{\"value\":0}");
+                    if (startIndex != -1)
+                    {
+                        // Trả về phần còn lại của chuỗi
+                        responseContent = responseContent.Substring(startIndex);
+                    }
 
+                    var apiResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
                     if (response.IsSuccessStatusCode)
                     {
-                        ApiResponseGetCheck apiResponse = JsonConvert.DeserializeObject<ApiResponseGetCheck>(responseContent);
                         return apiResponse.value;
                     }
                     else
                     {
                         FileHelper.LogError($"Error When Call API:{requestUrl} - {response.StatusCode} - {responseContent}");
 
-                        // Deserialize JSON response
-                        var responseData = JsonConvert.DeserializeObject<dynamic>(responseContent);
-
                         // Check for invalid token
-                        if (responseData != null && responseData.error == Setting.TOKEN_INVALID)
+                        if (apiResponse != null && apiResponse.error == Setting.TOKEN_INVALID)
                         {
                             return 401;// lỗi token
                         }

@@ -27,7 +27,10 @@ namespace LogScreen.Utils
             {
                 if (key != null)
                 {
-                    // Add the application startup entry
+                    // Remove any existing entry to avoid conflicts
+                    key.DeleteValue(appName, false);
+
+                    // Add the application startup entry again
                     key.SetValue(appName, exePath);
                 }
                 else
