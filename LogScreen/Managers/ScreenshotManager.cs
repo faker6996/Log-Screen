@@ -4,12 +4,19 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 using LogScreen.Utils;
 
 namespace LogScreen.Managers
 {
     public class ScreenshotManager
     {
+        [DllImport("gdi32.dll")]
+        private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+
+        private const int DESKTOPHORZRES = 118; // Độ phân giải thực tế theo chiều ngang
+        private const int DESKTOPVERTRES = 117; // Độ phân giải thực tế theo chiều dọc
+
         public List<string> CaptureAndSaveAllScreens(bool soundDetect)
         {
             try
@@ -27,18 +34,32 @@ namespace LogScreen.Managers
 
                     for (int i = 0; i < screens.Length; i++)
                     {
+                        // Lấy thông tin màn hình
                         Rectangle bounds = screens[i].Bounds;
-                        using (var screenshot = new Bitmap(bounds.Width, bounds.Height))
+
+                        // Lấy độ phân giải thực tế của màn hình (đã tính đến DPI scaling)
+                        int screenWidth, screenHeight;
+                        using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                        {
+                            IntPtr hdc = g.GetHdc();
+                            screenWidth = GetDeviceCaps(hdc, DESKTOPHORZRES);
+                            screenHeight = GetDeviceCaps(hdc, DESKTOPVERTRES);
+                            g.ReleaseHdc(hdc);
+                        }
+
+                        // Tạo bitmap với kích thước thực tế
+                        using (var screenshot = new Bitmap(screenWidth, screenHeight))
                         using (var graphics = Graphics.FromImage(screenshot))
                         {
-                            graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
+                            // Sao chép toàn bộ màn hình với tọa độ thực tế
+                            graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, new Size(screenWidth, screenHeight));
 
                             if (soundDetect)
                             {
                                 string audioInfo = SoundHelper.GetActiveAudioTab();
                                 if (!string.IsNullOrEmpty(audioInfo))
                                 {
-                                    AddWatermark(graphics, audioInfo, bounds.Width);
+                                    AddWatermark(graphics, audioInfo, screenWidth);
                                 }
                             }
 
