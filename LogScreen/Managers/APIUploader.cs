@@ -1,11 +1,13 @@
-﻿using Newtonsoft.Json; 
+﻿using Newtonsoft.Json;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Collections.Generic; 
+using System.Collections.Generic;
 using System.IO;
-using System.Text.Json.Serialization; 
-using LogScreen.Utils; 
+using System.Text.Json.Serialization;
+using LogScreen.Utils;
+using System.Windows.Forms;
+using System.Windows;
 
 namespace LogScreen.Managers
 {
@@ -23,7 +25,7 @@ namespace LogScreen.Managers
     /// </summary>
     class ApiResponseSetCheck
     {
-        [JsonPropertyName("success")] 
+        [JsonPropertyName("success")]
         public string success { get; set; }
     }
 
@@ -32,11 +34,11 @@ namespace LogScreen.Managers
     /// </summary>
     public class ApiResponseUpload
     {
-        [JsonPropertyName("success")] 
-        public bool Success { get; set; } 
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
 
         [JsonPropertyName("files")]
-        public List<FileResponse> Files { get; set; } 
+        public List<FileResponse> Files { get; set; }
     }
 
     /// <summary>
@@ -44,10 +46,10 @@ namespace LogScreen.Managers
     /// </summary>
     public class FileResponse
     {
-        [JsonPropertyName("file")] 
-        public string File { get; set; } 
+        [JsonPropertyName("file")]
+        public string File { get; set; }
 
-        [JsonPropertyName("message")] 
+        [JsonPropertyName("message")]
         public string Message { get; set; }
     }
 
@@ -63,7 +65,7 @@ namespace LogScreen.Managers
         /// <param name="osUUID">Unique identifier for the folder or operating system.</param>
         /// <param name="apiUrl">API URL.</param>
         /// <param name="authToken">Authentication token.</param>
-        public async Task UploadFileAsync(List<string> filePaths, string osUUID, string apiUrl, string authToken)
+        public async Task<string> UploadFileAsync(List<string> filePaths, string osUUID, string apiUrl, string authToken)
         {
             try
             {
@@ -101,7 +103,8 @@ namespace LogScreen.Managers
                         if (File.Exists(filePath))
                         {
                             // Create StreamContent to read the file content
-                            var fileStream = new StreamContent(File.OpenRead(filePath));
+                            //var fileStream = new StreamContent(File.OpenRead(filePath));
+                            var fileStream = new StreamContent(new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous));
                             fileStream.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
                             content.Add(fileStream, "files[]", Path.GetFileName(filePath)); // Attach the file to form-data
                         }
@@ -117,6 +120,7 @@ namespace LogScreen.Managers
 
                     // Read the JSON response from the API
                     string jsonResponse = await response.Content.ReadAsStringAsync();
+
                     var apiResponse = JsonConvert.DeserializeObject<ApiResponseUpload>(jsonResponse);
 
                     // Check if the response is successful
@@ -136,11 +140,11 @@ namespace LogScreen.Managers
 
                             if (File.Exists(fullFilePath))
                             {
-                                File.Delete(fullFilePath); 
+                                File.Delete(fullFilePath);
                             }
                             else
                             {
-                                FileHelper.LogError($"File not found: {fullFilePath}"); 
+                                FileHelper.LogError($"File not found: {fullFilePath}");
                             }
                         }
 
@@ -148,14 +152,27 @@ namespace LogScreen.Managers
                     else
                     {
                         FileHelper.LogError("Request failed or no files uploaded.");
-                        throw new Exception("Request failed or no files uploaded.");
+
+                        // Deserialize JSON response
+                        var responseData = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
+
+                        // Check for invalid token
+                        if (responseData != null && responseData.error == Setting.TOKEN_INVALID)
+                        {
+                            return Setting.TOKEN_INVALID;
+                        }
+                        else
+                        {
+                            MessageBoxHelper.ShowMessageServerError(Setting.MESSAGE_SERVER_ERROR, Setting.MESSAGE_TITLE);
+                        }
                     }
+                    return "OK";
                 }
             }
             catch (Exception ex)
             {
                 FileHelper.LogError($"Error: {ex.Message}");
-                throw; 
+                throw;
             }
         }
         /// <summary>
@@ -187,15 +204,29 @@ namespace LogScreen.Managers
                     else
                     {
                         FileHelper.LogError($"Error When Call API:{requestUrl} - {response.StatusCode} - {responseContent}");
-                        throw new Exception();
+
+                        // Deserialize JSON response
+                        var responseData = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                        // Check for invalid token
+                        if (responseData != null && responseData.error == Setting.TOKEN_INVALID)
+                        {
+                            return 401;// lỗi token
+                        }
+                        else
+                        {
+                            FileHelper.LogError($"Error When Call API");
+                            throw new Exception();
+                        }
+
                     }
                 }
             }
             catch (Exception ex)
             {
-
+                MessageBoxHelper.ShowMessageServerError(Setting.MESSAGE_SERVER_ERROR, Setting.MESSAGE_TITLE);
                 FileHelper.LogError($"Error When Call API: {ex.Message}");
-                throw new Exception(ex.Message);
+                return -1;
             }
         }
 
@@ -208,7 +239,7 @@ namespace LogScreen.Managers
         /// <param name="modeCheck">Check mode (set_value)</param>
         /// <param name="dataValue">Data value</param>
         /// <returns>true if successful</returns>
-        public async Task<bool> SetCheckTimer(string osUUID, string apiUrl, string authToken, string modeCheck, int dataValue)
+        public async Task<int> SetCheckTimer(string osUUID, string apiUrl, string authToken, string modeCheck, int dataValue)
         {
             try
             {
@@ -229,12 +260,25 @@ namespace LogScreen.Managers
                     if (response.IsSuccessStatusCode)
                     {
                         ApiResponseSetCheck apiResponse = JsonConvert.DeserializeObject<ApiResponseSetCheck>(responseContent);
-                        return apiResponse.success == "check.txt set by data_value to 0";
+                        return apiResponse.success == "check.txt set by data_value to 0" ? 1 : 0;
                     }
                     else
                     {
                         FileHelper.LogError($"Error When Call API:{requestUrl} - {response.StatusCode} - {responseContent}");
-                        throw new Exception();
+
+                        // Deserialize JSON response
+                        var responseData = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                        // Check for invalid token
+                        if (responseData != null && responseData.error == Setting.TOKEN_INVALID)
+                        {
+                            return 401;// lỗi token
+                        }
+                        else
+                        {
+                            FileHelper.LogError($"Error When Call API");
+                            throw new Exception();
+                        }
                     }
                 }
             }
@@ -242,7 +286,8 @@ namespace LogScreen.Managers
             {
 
                 FileHelper.LogError($"Error When Call API: {ex.Message}");
-                throw new Exception(ex.Message);
+                MessageBoxHelper.ShowMessageServerError(Setting.MESSAGE_SERVER_ERROR, Setting.MESSAGE_TITLE);
+                return -1;
             }
         }
 
