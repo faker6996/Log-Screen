@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public static class MessageBoxHelper
     {

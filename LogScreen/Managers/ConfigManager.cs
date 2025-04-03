@@ -1,13 +1,13 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using LogScreen.Entities;
+using Monitoring.Entities;
 using System;
 using Newtonsoft.Json;
 using System.IO;
-using LogScreen.Utils;
+using Monitoring.Utils;
 using System.Collections.Generic;
 
-namespace LogScreen.Managers
+namespace Monitoring.Managers
 {
     public static class ConfigManager
     {

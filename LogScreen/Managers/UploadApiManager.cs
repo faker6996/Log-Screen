@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Forms;
-using LogScreen.Entities;
-using LogScreen.Utils;
+using Monitoring.Entities;
+using Monitoring.Utils;
 
-namespace LogScreen.Managers
+namespace Monitoring.Managers
 {
     public class UploadApiManager
     {

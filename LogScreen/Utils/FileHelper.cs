@@ -3,7 +3,7 @@ using System.IO;
 using System.Management;
 using System.Windows.Forms;
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public static class FileHelper
     {

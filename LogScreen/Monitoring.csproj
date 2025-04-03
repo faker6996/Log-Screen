@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{8C190826-70D5-4286-9858-0A716948E099}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>LogScreen</RootNamespace>
-    <AssemblyName>LogScreen</AssemblyName>
+    <RootNamespace>Monitoring</RootNamespace>
+    <AssemblyName>Monitoring</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -52,7 +52,7 @@
     <ManifestCertificateThumbprint>03DB40F2D6AE1FEF649939958926C82688F4BC78</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>LogScreen_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Monitoring_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>

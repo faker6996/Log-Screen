@@ -4,7 +4,7 @@ using System.Windows.Automation;
 using NAudio.CoreAudioApi;
 using System.Runtime.InteropServices;
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public class SoundHelper
     {

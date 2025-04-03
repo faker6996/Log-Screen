@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using LogScreen.Entities;
-using LogScreen.Managers;
-using LogScreen.Utils;
+using Monitoring.Entities;
+using Monitoring.Managers;
+using Monitoring.Utils;
 
-namespace LogScreen
+namespace Monitoring
 {
     public partial class MainForm : Form
     {

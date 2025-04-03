@@ -5,9 +5,9 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using LogScreen.Utils;
+using Monitoring.Utils;
 
-namespace LogScreen.Managers
+namespace Monitoring.Managers
 {
     public class ScreenshotManager
     {

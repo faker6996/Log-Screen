@@ -2,13 +2,13 @@
 using System.Threading;
 using System.Windows.Forms;
 
-namespace LogScreen
+namespace Monitoring
 {
-    public class LogScreenApplicationContext : ApplicationContext
+    public class MonitoringApplicationContext : ApplicationContext
     {
         private MainForm _mainForm;
 
-        public LogScreenApplicationContext()
+        public MonitoringApplicationContext()
         {
             _mainForm = new MainForm();
             _mainForm.Visible = false;
@@ -28,7 +28,7 @@ namespace LogScreen
         static void Main()
         {
             bool isNewInstance;
-            mutex = new Mutex(true, "Global\\LogScreenMutex", out isNewInstance);
+            mutex = new Mutex(true, "Global\\MonitoringMutex", out isNewInstance);
 
             if (!isNewInstance)
             {
@@ -37,7 +37,7 @@ namespace LogScreen
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new LogScreenApplicationContext());
+            Application.Run(new MonitoringApplicationContext());
 
             mutex.ReleaseMutex();
         }

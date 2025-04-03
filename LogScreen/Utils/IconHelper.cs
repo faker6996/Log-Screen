@@ -1,9 +1,8 @@
-﻿using System.Drawing;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using System;
-using LogScreen.Entities;
+using Monitoring.Entities;
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public static class IconHelper
     {
