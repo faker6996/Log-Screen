@@ -225,6 +225,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="lightIcon.ico" />
+    <Content Include="Monitoring_setup.iss" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
