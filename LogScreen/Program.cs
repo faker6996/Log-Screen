@@ -22,14 +22,17 @@ namespace LogScreen
 
     internal static class Program
     {
-        static Mutex mutex = new Mutex(true);
+        static Mutex mutex;
 
         [STAThread]
         static void Main()
         {
-            if (!mutex.WaitOne(TimeSpan.Zero, true))
+            bool isNewInstance;
+            mutex = new Mutex(true, "Global\\LogScreenMutex", out isNewInstance);
+
+            if (!isNewInstance)
             {
-                return;
+                return; // Thoát ngay nếu ứng dụng đã chạy trước đó
             }
 
             Application.EnableVisualStyles();
