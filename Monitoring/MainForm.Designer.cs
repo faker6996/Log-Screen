@@ -1,4 +1,4 @@
-﻿namespace LogScreen
+﻿namespace Monitoring
 {
     partial class MainForm
     {

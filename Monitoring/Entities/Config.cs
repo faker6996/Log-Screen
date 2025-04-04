@@ -1,4 +1,4 @@
-﻿namespace LogScreen.Entities
+﻿namespace Monitoring.Entities
 {
     public class Config
     {

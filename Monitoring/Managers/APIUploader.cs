@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
-using LogScreen.Utils;
+using Monitoring.Utils;
 using System.Windows.Forms;
 using System.Windows;
 
-namespace LogScreen.Managers
+namespace Monitoring.Managers
 {
     /// <summary>
     /// Defines the response class from the API Check.

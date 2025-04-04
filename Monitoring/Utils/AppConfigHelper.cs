@@ -1,7 +1,7 @@
 ﻿using System.Configuration;
 
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public static class AppConfigHelper
     {

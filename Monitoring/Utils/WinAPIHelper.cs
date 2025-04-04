@@ -1,9 +1,7 @@
 ﻿using Microsoft.Win32;
-using System.IO;
-using System;
 using System.Windows.Forms;
 
-namespace LogScreen.Utils
+namespace Monitoring.Utils
 {
     public class WinAPIHelper
     {
