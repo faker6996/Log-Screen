@@ -200,9 +200,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Logs\" />
   </ItemGroup>
   <ItemGroup>
@@ -225,7 +222,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="lightIcon.ico" />
-    <Content Include="Monitoring_setup.iss" />
+    <Content Include="setup.iss" />
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
